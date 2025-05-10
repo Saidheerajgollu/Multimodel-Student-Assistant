@@ -1,0 +1,140 @@
+/* Dropzone styles */
+.dropzone {
+    border: 2px dashed #ccc;
+    border-radius: 5px;
+    padding: 30px;
+    text-align: center;
+    background-color: #f8f9fa;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.dropzone:hover {
+    background-color: #e9ecef;
+}
+
+.dropzone.drag-over {
+    background-color: #e2e6ea;
+    border-color: #6c757d;
+}
+
+.dz-message {
+    margin: 0;
+}
+
+/* Flashcard styles */
+.flashcards-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.flashcard {
+    width: 300px;
+    height: 200px;
+    perspective: 1000px;
+    margin-bottom: 20px;
+}
+
+.flashcard-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    transition: transform 0.6s;
+    transform-style: preserve-3d;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    cursor: pointer;
+}
+
+.flashcard:hover .flashcard-inner {
+    transform: rotateY(180deg);
+}
+
+.flashcard-front, .flashcard-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.flashcard-front {
+    background-color: #f0f8ff;
+    color: #212529;
+}
+
+.flashcard-back {
+    background-color: #e8f4f8;
+    color: #212529;
+    transform: rotateY(180deg);
+}
+
+.flashcard-front-text, .flashcard-back-text {
+    font-size: 1.1rem;
+    padding: 10px;
+    margin: 0;
+}
+
+/* Document list styles */
+.document-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.document-status {
+    font-size: 0.8rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 3px;
+}
+
+.status-processing {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.status-ready {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.status-error {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+/* Response styles */
+#response-container {
+    min-height: 200px;
+}
+
+.response-content {
+    white-space: pre-wrap;
+    line-height: 1.5;
+}
+
+/* Loading animation */
+.loading-dots::after {
+    content: '';
+    animation: dots 1.5s infinite;
+}
+
+@keyframes dots {
+    0%, 20% { content: '.'; }
+    40% { content: '..'; }
+    60%, 100% { content: '...'; }
+}
+
+/* Responsive adjustments */
+@media (max-width: 767.98px) {
+    .flashcard {
+        width: 100%;
+    }
+} 

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multimodal Study Assistant</title>
+    <link rel="stylesheet" href="src/styles/main.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-4">
+        <header>
+            <h1 class="text-center mb-4">Multimodal Study Assistant</h1>
+        </header>
+        
+        <main>
+            <div class="row">
+                <!-- Left side: Document upload and management -->
+                <div class="col-md-5">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h2 class="h5 mb-0">Upload Study Materials</h2>
+                        </div>
+                        <div class="card-body">
+                            <div id="dropzone" class="dropzone mb-3">
+                                <div class="dz-message">
+                                    <p>Drag & drop files here or click to upload</p>
+                                    <p class="text-muted small">Supported formats: PDF, PNG, JPG</p>
+                                </div>
+                            </div>
+                            <div class="progress mb-3 d-none" id="upload-progress-container">
+                                <div class="progress-bar" id="upload-progress" role="progressbar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="h5 mb-0">Your Documents</h2>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-group" id="document-list">
+                                <!-- Documents will be listed here -->
+                                <li class="list-group-item text-muted">No documents uploaded yet</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Right side: Interaction with documents -->
+                <div class="col-md-7">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <ul class="nav nav-tabs card-header-tabs" id="interactionTabs" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link active" id="questions-tab" data-bs-toggle="tab" data-bs-target="#questions" type="button" role="tab" aria-controls="questions" aria-selected="true">Ask Questions</button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="flashcards-tab" data-bs-toggle="tab" data-bs-target="#flashcards" type="button" role="tab" aria-controls="flashcards" aria-selected="false">Flashcards</button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="summary-tab" data-bs-toggle="tab" data-bs-target="#summary" type="button" role="tab" aria-controls="summary" aria-selected="false">Summarize</button>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="card-body">
+                            <div class="tab-content" id="interactionTabsContent">
+                                <!-- Questions Tab -->
+                                <div class="tab-pane fade show active" id="questions" role="tabpanel" aria-labelledby="questions-tab">
+                                    <div class="mb-3">
+                                        <label for="question-input" class="form-label">Ask a study question:</label>
+                                        <input type="text" class="form-control" id="question-input" placeholder="e.g., What is the key concept in chapter 3?">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="document-select" class="form-label">Search in document:</label>
+                                        <select class="form-select" id="document-select">
+                                            <option value="">All documents</option>
+                                            <!-- Documents will be added here -->
+                                        </select>
+                                    </div>
+                                    <button class="btn btn-primary" id="ask-button">Ask Question</button>
+                                </div>
+                                
+                                <!-- Flashcards Tab -->
+                                <div class="tab-pane fade" id="flashcards" role="tabpanel" aria-labelledby="flashcards-tab">
+                                    <div class="mb-3">
+                                        <label for="flashcard-document-select" class="form-label">Generate flashcards from:</label>
+                                        <select class="form-select" id="flashcard-document-select">
+                                            <option value="">Select a document</option>
+                                            <!-- Documents will be added here -->
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="flashcard-count" class="form-label">Number of flashcards:</label>
+                                        <input type="number" class="form-control" id="flashcard-count" value="5" min="1" max="20">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="flashcard-topic" class="form-label">Topic (optional):</label>
+                                        <input type="text" class="form-control" id="flashcard-topic" placeholder="e.g., Neural Networks">
+                                    </div>
+                                    <button class="btn btn-primary" id="generate-flashcards-button">Generate Flashcards</button>
+                                </div>
+                                
+                                <!-- Summary Tab -->
+                                <div class="tab-pane fade" id="summary" role="tabpanel" aria-labelledby="summary-tab">
+                                    <div class="mb-3">
+                                        <label for="summary-document-select" class="form-label">Summarize document:</label>
+                                        <select class="form-select" id="summary-document-select">
+                                            <option value="">Select a document</option>
+                                            <!-- Documents will be added here -->
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="summary-length" class="form-label">Maximum length (words):</label>
+                                        <input type="number" class="form-control" id="summary-length" value="500" min="100" max="1000">
+                                    </div>
+                                    <button class="btn btn-primary" id="generate-summary-button">Generate Summary</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Response section -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="h5 mb-0">Response</h2>
+                        </div>
+                        <div class="card-body">
+                            <div id="response-container">
+                                <p class="text-muted">Ask a question or generate content to see results here.</p>
+                            </div>
+                            <div class="d-flex justify-content-center mt-3 d-none" id="response-loader">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <footer class="mt-4 text-center text-muted">
+            <p>Multimodal Study Assistant - Master's Software Engineering Project</p>
+        </footer>
+    </div>
+
+    <!-- Flashcard template (hidden) -->
+    <template id="flashcard-template">
+        <div class="flashcard">
+            <div class="flashcard-inner">
+                <div class="flashcard-front p-3">
+                    <p class="flashcard-front-text"></p>
+                </div>
+                <div class="flashcard-back p-3">
+                    <p class="flashcard-back-text"></p>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="src/services/api.js"></script>
+    <script src="src/services/document-service.js"></script>
+    <script src="src/components/document-list.js"></script>
+    <script src="src/components/flashcards.js"></script>
+    <script src="src/main.js"></script>
+</body>
+</html> 
