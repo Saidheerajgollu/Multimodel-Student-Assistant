@@ -8,8 +8,8 @@ from app.db.document_store import DocumentStore
 from app.db.vector_store import get_vector_store
 from app.models.question import Flashcard
 
-# Import the updated Gemini client
-from google import genai
+# Import the correct Gemini client
+import google.generativeai as genai
 
 # Load environment variables
 load_dotenv()
@@ -19,7 +19,7 @@ if not gemini_api_key:
     raise RuntimeError("GEMINI_API_KEY not configured. Please set the GEMINI_API_KEY environment variable.")
 
 # Configure the Gemini client with the API key
-client = genai.Client(api_key=gemini_api_key)
+genai.configure(api_key=gemini_api_key)
 
 # Debug function
 def log_debug(message):
@@ -27,7 +27,7 @@ def log_debug(message):
         f.write(f"{message}\n")
 
 # Set the model to the latest version
-DEFAULT_MODEL = "gemini-2.0-flash"
+DEFAULT_MODEL = "gemini-1.5-flash"
 log_debug(f"Using model: {DEFAULT_MODEL}")
 
 async def answer_question(
@@ -56,11 +56,9 @@ CONTEXT:
 
 QUESTION: {question}
 """
-        # Use the new client API format
-        response = client.models.generate_content(
-            model=DEFAULT_MODEL,
-            contents=prompt
-        )
+        # Use the correct API format
+        model = genai.GenerativeModel(DEFAULT_MODEL)
+        response = model.generate_content(prompt)
         answer = response.text.strip()
         log_debug(f"Got Gemini response, length: {len(answer)}")
         return answer
@@ -148,11 +146,9 @@ Focus on key concepts, definitions, and important facts.
 Return only the flashcards, no explanations or extra text.
 CONTENT:\n{content}
 """
-        # Use the new client API format
-        response = client.models.generate_content(
-            model=DEFAULT_MODEL,
-            contents=prompt
-        )
+        # Use the correct API format
+        model = genai.GenerativeModel(DEFAULT_MODEL)
+        response = model.generate_content(prompt)
         response_text = response.text.strip()
         # Parse flashcards from the response (expecting Q: ... A: ... format)
         flashcards = []
@@ -256,11 +252,9 @@ Focus on the main points, key concepts, and important details.
 The summary should be concise, coherent, and well-structured.
 CONTENT:\n{content}
 """
-        # Use the new client API format
-        response = client.models.generate_content(
-            model=DEFAULT_MODEL,
-            contents=prompt
-        )
+        # Use the correct API format
+        model = genai.GenerativeModel(DEFAULT_MODEL)
+        response = model.generate_content(prompt)
         summary = response.text.strip()
         if not summary:
             raise ValueError("No summary returned from Gemini.")

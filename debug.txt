@@ -5,3 +5,12 @@ Document d02e6e3e-121b-4e97-ab65-0425eb06a5d7 processing completed in 0.01 secon
 answer_question called with question: what is this lecture about explain in detail
 Retrieved 5 context chunks
 Got Gemini response, length: 265
+Using model: gemini-1.5-flash
+Starting processing for document d9e98da5-634e-45a9-83b2-6e3f38f09264, file: uploads/d9e98da5-634e-45a9-83b2-6e3f38f09264.pdf
+Extracted 2 chunks from document d9e98da5-634e-45a9-83b2-6e3f38f09264
+Initialized SimpleDictVectorStore
+Adding 2 chunks to vector store in batches of 10
+Document d9e98da5-634e-45a9-83b2-6e3f38f09264 processing completed in 0.02 seconds
+answer_question called with question: WHAT IS THIS ABOUT
+Retrieved 2 context chunks
+Got Gemini response, length: 353
