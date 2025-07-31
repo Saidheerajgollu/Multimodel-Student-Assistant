@@ -71,3 +71,4 @@ answer_question called with question: what is this about
 Retrieved 2 context chunks
 Got Gemini response, length: 231
 Using model: gemini-1.5-flash
+Using model: gemini-1.5-flash
