@@ -4,9 +4,9 @@ import tempfile
 import uuid
 import fitz  # PyMuPDF
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.embeddings import HuggingFaceEmbeddings
-from langchain.vectorstores import Chroma
-from langchain.llms import GoogleGenerativeAI
+from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_community.vectorstores import Chroma
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.chains import RetrievalQA
 import google.generativeai as genai
 import base64
@@ -175,8 +175,8 @@ def setup_rag_chain(chunks):
         
         # Setup LLM
         genai.configure(api_key=st.secrets.get("GOOGLE_API_KEY"))
-        llm = GoogleGenerativeAI(
-            model="gemini-1.5-flash",
+        llm = ChatGoogleGenerativeAI(
+            model="gemini-pro",
             temperature=0.1,
             max_output_tokens=2048
         )
@@ -185,7 +185,8 @@ def setup_rag_chain(chunks):
         rag_chain = RetrievalQA.from_chain_type(
             llm=llm,
             chain_type="stuff",
-            retriever=vector_store.as_retriever(search_kwargs={"k": 5})
+            retriever=vector_store.as_retriever(search_kwargs={"k": 5}),
+            return_source_documents=True
         )
         
         return vector_store, rag_chain
@@ -407,7 +408,8 @@ elif page == "❓ Ask Questions":
             if st.button("🤖 Ask AI", use_container_width=True) and question:
                 with st.spinner("🧠 Thinking..."):
                     try:
-                        answer = st.session_state.rag_chain.run(question)
+                        result = st.session_state.rag_chain({"query": question})
+                        answer = result["result"]
                         
                         # Store in chat history
                         st.session_state.chat_history.append({
