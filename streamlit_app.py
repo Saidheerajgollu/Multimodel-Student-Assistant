@@ -2,7 +2,7 @@ import streamlit as st
 import os
 import tempfile
 import uuid
-import PyMuPDF
+import fitz  # PyMuPDF
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
@@ -293,7 +293,7 @@ def initialize_ai_models():
 def extract_text_from_pdf(pdf_file):
     """Extract text from PDF file"""
     try:
-        doc = PyMuPDF.open(stream=pdf_file.read(), filetype="pdf")
+        doc = fitz.open(stream=pdf_file.read(), filetype="pdf")
         text = ""
         for page in doc:
             text += page.get_text()
