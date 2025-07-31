@@ -143,9 +143,52 @@ if 'page' not in st.session_state:
     st.session_state['page'] = "🏠 Dashboard"
 
 # Initialize AI models
-embeddings, vector_store, llm, rag_chain = initialize_ai_models()
+@st.cache_resource
+def initialize_ai_models():
+    """Initialize AI models and vector store"""
+    try:
+        with st.spinner("Setting up AI models..."):
+            # Initialize embeddings
+            embeddings = HuggingFaceEmbeddings(
+                model_name="sentence-transformers/all-MiniLM-L6-v2",
+                model_kwargs={'device': 'cpu'}
+            )
+            
+            # Initialize FAISS with cloud storage
+            vector_store = FAISSWithCloudStorage(embeddings)
+            
+            # Try to load existing index from cloud
+            existing_store = vector_store.load_from_cloud()
+            if existing_store:
+                vector_store.vectorstore = existing_store
+            
+            # Initialize LLM
+            llm = ChatGoogleGenerativeAI(
+                model="gemini-1.0-pro",
+                google_api_key=st.secrets.get("GOOGLE_API_KEY"),
+                temperature=0.7,
+                convert_system_message_to_human=True
+            )
+            
+            # Create RAG chain
+            if vector_store.vectorstore:
+                rag_chain = RetrievalQA.from_chain_type(
+                    llm=llm,
+                    chain_type="stuff",
+                    retriever=vector_store.vectorstore.as_retriever(search_kwargs={"k": 5}),
+                    return_source_documents=True
+                )
+            else:
+                rag_chain = None
+            
+            st.success("✅ AI models initialized successfully!")
+            return embeddings, vector_store, llm, rag_chain
+            
+    except Exception as e:
+        st.error(f"❌ Failed to setup AI processing: {str(e)}")
+        return None, None, None, None
 
-# Store in session state for access across the app
+embeddings, vector_store, llm, rag_chain = initialize_ai_models()
 if embeddings and vector_store and llm:
     st.session_state.embeddings = embeddings
     st.session_state.vector_store = vector_store
@@ -243,52 +286,6 @@ class FAISSWithCloudStorage:
         except Exception as e:
             st.error(f"Search failed: {str(e)}")
             return []
-
-# Initialize AI models
-@st.cache_resource
-def initialize_ai_models():
-    """Initialize AI models and vector store"""
-    try:
-        with st.spinner("Setting up AI models..."):
-            # Initialize embeddings
-            embeddings = HuggingFaceEmbeddings(
-                model_name="sentence-transformers/all-MiniLM-L6-v2",
-                model_kwargs={'device': 'cpu'}
-            )
-            
-            # Initialize FAISS with cloud storage
-            vector_store = FAISSWithCloudStorage(embeddings)
-            
-            # Try to load existing index from cloud
-            existing_store = vector_store.load_from_cloud()
-            if existing_store:
-                vector_store.vectorstore = existing_store
-            
-            # Initialize LLM
-            llm = ChatGoogleGenerativeAI(
-                model="gemini-1.0-pro",
-                google_api_key=st.secrets.get("GOOGLE_API_KEY"),
-                temperature=0.7,
-                convert_system_message_to_human=True
-            )
-            
-            # Create RAG chain
-            if vector_store.vectorstore:
-                rag_chain = RetrievalQA.from_chain_type(
-                    llm=llm,
-                    chain_type="stuff",
-                    retriever=vector_store.vectorstore.as_retriever(search_kwargs={"k": 5}),
-                    return_source_documents=True
-                )
-            else:
-                rag_chain = None
-            
-            st.success("✅ AI models initialized successfully!")
-            return embeddings, vector_store, llm, rag_chain
-            
-    except Exception as e:
-        st.error(f"❌ Failed to setup AI processing: {str(e)}")
-        return None, None, None, None
 
 def extract_text_from_pdf(pdf_file):
     """Extract text from PDF file"""
