@@ -2,15 +2,18 @@ import streamlit as st
 import os
 import tempfile
 import uuid
-import fitz  # PyMuPDF
+import PyMuPDF
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.embeddings import HuggingFaceEmbeddings
-from langchain_community.vectorstores import Chroma
+from langchain_community.vectorstores import FAISS
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.chains import RetrievalQA
 import google.generativeai as genai
 import base64
 from datetime import datetime
+import pickle
+import json
+import io
 
 # Page configuration with custom theme
 st.set_page_config(
@@ -139,10 +142,158 @@ if 'chat_history' not in st.session_state:
 if 'page' not in st.session_state:
     st.session_state['page'] = "🏠 Dashboard"
 
+# Initialize AI models
+embeddings, vector_store, llm, rag_chain = initialize_ai_models()
+
+# Store in session state for access across the app
+if embeddings and vector_store and llm:
+    st.session_state.embeddings = embeddings
+    st.session_state.vector_store = vector_store
+    st.session_state.llm = llm
+    st.session_state.rag_chain = rag_chain
+
+# Initialize Google Cloud Storage
+def init_google_storage():
+    """Initialize Google Cloud Storage client"""
+    try:
+        # For Streamlit Cloud, we'll use service account key from secrets
+        if 'GOOGLE_CLOUD_CREDENTIALS' in st.secrets:
+            import json
+            credentials_info = json.loads(st.secrets['GOOGLE_CLOUD_CREDENTIALS'])
+            from google.oauth2 import service_account
+            credentials = service_account.Credentials.from_service_account_info(credentials_info)
+            storage_client = storage.Client(credentials=credentials)
+        else:
+            # Fallback to default credentials (for local development)
+            storage_client = storage.Client()
+        
+        bucket_name = st.secrets.get('GOOGLE_CLOUD_BUCKET', 'your-bucket-name')
+        bucket = storage_client.bucket(bucket_name)
+        return storage_client, bucket
+    except Exception as e:
+        st.error(f"Failed to initialize Google Cloud Storage: {str(e)}")
+        return None, None
+
+# FAISS Vector Store with Google Cloud Storage
+class FAISSWithCloudStorage:
+    def __init__(self, embeddings, bucket_name="your-bucket-name"):
+        self.embeddings = embeddings
+        self.bucket_name = bucket_name
+        self.storage_client, self.bucket = init_google_storage()
+        self.vectorstore = None
+        self.index_name = "faiss_index"
+        
+    def load_from_cloud(self):
+        """Load FAISS index from Google Cloud Storage"""
+        try:
+            if not self.bucket:
+                return None
+                
+            # Download index files from cloud
+            index_blob = self.bucket.blob(f"{self.index_name}.pkl")
+            if index_blob.exists():
+                index_data = index_blob.download_as_bytes()
+                self.vectorstore = pickle.loads(index_data)
+                st.success("✅ Loaded existing vector store from Google Cloud")
+                return self.vectorstore
+            else:
+                st.info("No existing vector store found. Starting fresh.")
+                return None
+        except Exception as e:
+            st.warning(f"Could not load from cloud: {str(e)}")
+            return None
+    
+    def save_to_cloud(self):
+        """Save FAISS index to Google Cloud Storage"""
+        try:
+            if not self.bucket or not self.vectorstore:
+                return
+                
+            # Serialize and upload to cloud
+            index_data = pickle.dumps(self.vectorstore)
+            index_blob = self.bucket.blob(f"{self.index_name}.pkl")
+            index_blob.upload_from_string(index_data)
+            st.success("✅ Saved vector store to Google Cloud")
+        except Exception as e:
+            st.error(f"Failed to save to cloud: {str(e)}")
+    
+    def add_documents(self, documents):
+        """Add documents to FAISS vector store"""
+        try:
+            if not self.vectorstore:
+                # Create new FAISS index
+                self.vectorstore = FAISS.from_documents(documents, self.embeddings)
+            else:
+                # Add to existing index
+                self.vectorstore.add_documents(documents)
+            
+            # Save to cloud after adding documents
+            self.save_to_cloud()
+            return self.vectorstore
+        except Exception as e:
+            st.error(f"Failed to add documents: {str(e)}")
+            return None
+    
+    def similarity_search(self, query, k=5):
+        """Search for similar documents"""
+        if not self.vectorstore:
+            return []
+        try:
+            return self.vectorstore.similarity_search(query, k=k)
+        except Exception as e:
+            st.error(f"Search failed: {str(e)}")
+            return []
+
+# Initialize AI models
+@st.cache_resource
+def initialize_ai_models():
+    """Initialize AI models and vector store"""
+    try:
+        with st.spinner("Setting up AI models..."):
+            # Initialize embeddings
+            embeddings = HuggingFaceEmbeddings(
+                model_name="sentence-transformers/all-MiniLM-L6-v2",
+                model_kwargs={'device': 'cpu'}
+            )
+            
+            # Initialize FAISS with cloud storage
+            vector_store = FAISSWithCloudStorage(embeddings)
+            
+            # Try to load existing index from cloud
+            existing_store = vector_store.load_from_cloud()
+            if existing_store:
+                vector_store.vectorstore = existing_store
+            
+            # Initialize LLM
+            llm = ChatGoogleGenerativeAI(
+                model="gemini-1.0-pro",
+                google_api_key=st.secrets.get("GOOGLE_API_KEY"),
+                temperature=0.7,
+                convert_system_message_to_human=True
+            )
+            
+            # Create RAG chain
+            if vector_store.vectorstore:
+                rag_chain = RetrievalQA.from_chain_type(
+                    llm=llm,
+                    chain_type="stuff",
+                    retriever=vector_store.vectorstore.as_retriever(search_kwargs={"k": 5}),
+                    return_source_documents=True
+                )
+            else:
+                rag_chain = None
+            
+            st.success("✅ AI models initialized successfully!")
+            return embeddings, vector_store, llm, rag_chain
+            
+    except Exception as e:
+        st.error(f"❌ Failed to setup AI processing: {str(e)}")
+        return None, None, None, None
+
 def extract_text_from_pdf(pdf_file):
     """Extract text from PDF file"""
     try:
-        doc = fitz.open(stream=pdf_file.read(), filetype="pdf")
+        doc = PyMuPDF.open(stream=pdf_file.read(), filetype="pdf")
         text = ""
         for page in doc:
             text += page.get_text()
@@ -162,40 +313,7 @@ def create_chunks(text, chunk_size=1000, chunk_overlap=200):
     chunks = text_splitter.split_text(text)
     return chunks
 
-def setup_rag_chain(chunks):
-    """Setup RAG chain with embeddings and vector store"""
-    try:
-        # Initialize embeddings
-        embeddings = HuggingFaceEmbeddings(
-            model_name="sentence-transformers/all-MiniLM-L6-v2"
-        )
-        
-        # Create vector store
-        vector_store = Chroma.from_texts(
-            texts=chunks,
-            embedding=embeddings,
-            persist_directory="./chroma_db"
-        )
-        
-        # Setup LLM
-        genai.configure(api_key=st.secrets.get("GOOGLE_API_KEY"))
-        llm = ChatGoogleGenerativeAI(
-            model="gemini-1.0-pro",
-            temperature=0.1,
-            max_output_tokens=2048
-        )
-        
-        # Create RAG chain
-        rag_chain = RetrievalQA.from_chain_type(
-            llm=llm,
-            chain_type="stuff",
-            retriever=vector_store.as_retriever(search_kwargs={"k": 5})
-        )
-        
-        return vector_store, rag_chain
-    except Exception as e:
-        st.error(f"Error setting up RAG chain: {e}")
-        return None, None
+# This function is no longer needed as we use FAISSWithCloudStorage
 
 def generate_flashcards(question, answer):
     """Generate flashcards from Q&A"""
@@ -351,15 +469,26 @@ elif page == "📄 Upload Documents":
                         status_text.text("📝 Extracting text chunks...")
                         progress_bar.progress(30)
                         
-                        # Setup RAG chain
+                        # Setup RAG chain with FAISS
                         status_text.text("🤖 Setting up AI models...")
                         progress_bar.progress(60)
                         
-                        vector_store, rag_chain = setup_rag_chain(chunks)
+                        # Create documents for vector store
+                        from langchain.schema import Document
+                        documents = [Document(page_content=chunk, metadata={"source": uploaded_file.name}) for chunk in chunks]
                         
-                        if vector_store and rag_chain:
-                            st.session_state.vector_store = vector_store
-                            st.session_state.rag_chain = rag_chain
+                        # Add to FAISS vector store
+                        if st.session_state.vector_store:
+                            st.session_state.vector_store.add_documents(documents)
+                            
+                            # Update RAG chain with new vector store
+                            if st.session_state.vector_store.vectorstore:
+                                st.session_state.rag_chain = RetrievalQA.from_chain_type(
+                                    llm=st.session_state.llm,
+                                    chain_type="stuff",
+                                    retriever=st.session_state.vector_store.vectorstore.as_retriever(search_kwargs={"k": 5}),
+                                    return_source_documents=True
+                                )
                             
                             # Store document info
                             doc_info = {
@@ -414,7 +543,10 @@ elif page == "❓ Ask Questions":
             if st.button("🤖 Ask AI", use_container_width=True) and question:
                 with st.spinner("🧠 Thinking..."):
                     try:
-                        answer = st.session_state.rag_chain.run(question)
+                        # Get answer with source documents
+                        result = st.session_state.rag_chain({"query": question})
+                        answer = result["result"]
+                        source_docs = result.get("source_documents", [])
                         
                         # Store in chat history
                         st.session_state.chat_history.append({
@@ -429,6 +561,12 @@ elif page == "❓ Ask Questions":
                             <p>{answer}</p>
                         </div>
                         """, unsafe_allow_html=True)
+                        
+                        # Show source documents if available
+                        if source_docs:
+                            with st.expander("📚 View Sources"):
+                                for i, doc in enumerate(source_docs[:3]):  # Show top 3 sources
+                                    st.markdown(f"**Source {i+1}:** {doc.page_content[:200]}...")
                         
                     except Exception as e:
                         st.error(f"❌ Error generating answer: {e}")
