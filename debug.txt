@@ -14,3 +14,60 @@ Document d9e98da5-634e-45a9-83b2-6e3f38f09264 processing completed in 0.02 secon
 answer_question called with question: WHAT IS THIS ABOUT
 Retrieved 2 context chunks
 Got Gemini response, length: 353
+Using model: gemini-1.5-flash
+Starting processing for document 86a63c58-33ba-4f58-bea7-b0f289c85d04, file: uploads/86a63c58-33ba-4f58-bea7-b0f289c85d04.pdf
+Extracted 12 chunks from document 86a63c58-33ba-4f58-bea7-b0f289c85d04
+Initialized SimpleDictVectorStore
+Adding 12 chunks to vector store in batches of 10
+Document 86a63c58-33ba-4f58-bea7-b0f289c85d04 processing completed in 0.02 seconds
+answer_question called with question: what is this pdf about
+Retrieved 5 context chunks
+Got Gemini response, length: 89
+Using model: gemini-1.5-flash
+Using model: gemini-1.5-flash
+Using model: gemini-1.5-flash
+Using model: gemini-1.5-flash
+Using model: gemini-1.5-flash
+Using model: gemini-1.5-flash
+Using model: gemini-1.5-flash
+Using model: gemini-1.5-flash
+Starting processing for document 8dc92714-d755-47c6-a6ce-b4107bf3d4a0, file: uploads/8dc92714-d755-47c6-a6ce-b4107bf3d4a0.pdf
+Extracted 7 chunks from document 8dc92714-d755-47c6-a6ce-b4107bf3d4a0
+Initialized SimpleDictVectorStore
+Adding 7 chunks to vector store in batches of 10
+Document 8dc92714-d755-47c6-a6ce-b4107bf3d4a0 processing completed in 0.01 seconds
+Using model: gemini-1.5-flash
+Using model: gemini-1.5-flash
+Using model: gemini-1.5-flash
+answer_question called with question: what is this assignment about
+Initialized SimpleDictVectorStore
+No context found for question
+Using model: gemini-1.5-flash
+Using model: gemini-1.5-flash
+answer_question called with question: 280 assignment pdf explain
+Initialized SimpleDictVectorStore
+No context found for question
+answer_question called with question: 280 assignment pdf explain
+No context found for question
+Starting processing for document 6f3603aa-66ea-40b1-9b81-1209cfc50512, file: uploads/6f3603aa-66ea-40b1-9b81-1209cfc50512.pdf
+Extracted 2 chunks from document 6f3603aa-66ea-40b1-9b81-1209cfc50512
+Adding 2 chunks to vector store in batches of 10
+Document 6f3603aa-66ea-40b1-9b81-1209cfc50512 processing completed in 0.01 seconds
+answer_question called with question: what is this about
+Retrieved 2 context chunks
+Got Gemini response, length: 212
+Using model: gemini-1.5-flash
+Using model: gemini-1.5-flash
+Using model: gemini-1.5-flash
+Using model: gemini-1.5-flash
+Using model: gemini-1.5-flash
+Using model: gemini-1.5-flash
+Starting processing for document 01fd4244-1be7-40e3-97c8-1773182cbc50, file: uploads/01fd4244-1be7-40e3-97c8-1773182cbc50.pdf
+Extracted 2 chunks from document 01fd4244-1be7-40e3-97c8-1773182cbc50
+Initialized SimpleDictVectorStore
+Adding 2 chunks to vector store in batches of 10
+Document 01fd4244-1be7-40e3-97c8-1773182cbc50 processing completed in 0.01 seconds
+answer_question called with question: what is this about
+Retrieved 2 context chunks
+Got Gemini response, length: 231
+Using model: gemini-1.5-flash
