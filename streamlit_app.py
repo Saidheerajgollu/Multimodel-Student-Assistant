@@ -135,6 +135,10 @@ if 'rag_chain' not in st.session_state:
 if 'chat_history' not in st.session_state:
     st.session_state.chat_history = []
 
+# Ensure session state for navigation
+if 'page' not in st.session_state:
+    st.session_state['page'] = "🏠 Dashboard"
+
 def extract_text_from_pdf(pdf_file):
     """Extract text from PDF file"""
     try:
@@ -239,8 +243,10 @@ with st.sidebar:
     st.markdown("### 📚 Navigation")
     page = st.selectbox(
         "Choose a section:",
-        ["🏠 Dashboard", "📄 Upload Documents", "❓ Ask Questions", "📋 Document Library", "📝 Flashcards"]
+        ["🏠 Dashboard", "📄 Upload Documents", "❓ Ask Questions", "📋 Document Library", "📝 Flashcards"],
+        key="page"
     )
+    st.session_state['page'] = page
     
     # Stats
     if st.session_state.documents:
@@ -251,6 +257,7 @@ with st.sidebar:
         st.metric("Text Chunks", total_chunks)
 
 # Main content based on navigation
+page = st.session_state['page']
 if page == "🏠 Dashboard":
     # Hero section
     st.markdown("""
@@ -293,11 +300,11 @@ if page == "🏠 Dashboard":
     
     with col1:
         if st.button("📄 Upload New Document", use_container_width=True):
-            st.switch_page("📄 Upload Documents")
+            st.session_state['page'] = "�� Upload Documents"
     
     with col2:
         if st.button("❓ Start Asking Questions", use_container_width=True):
-            st.switch_page("❓ Ask Questions")
+            st.session_state['page'] = "❓ Ask Questions"
 
 elif page == "📄 Upload Documents":
     st.markdown("""
@@ -445,7 +452,7 @@ elif page == "❓ Ask Questions":
     else:
         st.warning("⚠️ Please upload a document first to ask questions.")
         if st.button("📄 Upload Document"):
-            st.switch_page("📄 Upload Documents")
+            st.session_state['page'] = "�� Upload Documents"
 
 elif page == "📋 Document Library":
     st.markdown("""
@@ -474,7 +481,7 @@ elif page == "📋 Document Library":
                 col1, col2 = st.columns(2)
                 with col1:
                     if st.button(f"❓ Ask about this document", key=f"ask_{i}"):
-                        st.switch_page("❓ Ask Questions")
+                        st.session_state['page'] = "❓ Ask Questions"
                 
                 with col2:
                     if st.button(f"🗑️ Remove", key=f"remove_{i}"):
