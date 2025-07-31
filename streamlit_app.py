@@ -188,12 +188,7 @@ def initialize_ai_models():
         st.error(f"❌ Failed to setup AI processing: {str(e)}")
         return None, None, None, None
 
-embeddings, vector_store, llm, rag_chain = initialize_ai_models()
-if embeddings and vector_store and llm:
-    st.session_state.embeddings = embeddings
-    st.session_state.vector_store = vector_store
-    st.session_state.llm = llm
-    st.session_state.rag_chain = rag_chain
+# This will be called after all functions are defined
 
 # Initialize Google Cloud Storage
 def init_google_storage():
@@ -651,6 +646,14 @@ elif page == "📝 Flashcards":
                 """, unsafe_allow_html=True)
     else:
         st.info("📝 No Q&A sessions yet. Ask some questions to generate flashcards!")
+
+# Initialize AI models after all functions are defined
+embeddings, vector_store, llm, rag_chain = initialize_ai_models()
+if embeddings and vector_store and llm:
+    st.session_state.embeddings = embeddings
+    st.session_state.vector_store = vector_store
+    st.session_state.llm = llm
+    st.session_state.rag_chain = rag_chain
 
 # Footer
 st.markdown("---")
