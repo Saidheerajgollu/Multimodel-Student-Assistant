@@ -246,7 +246,7 @@ with st.sidebar:
         ["🏠 Dashboard", "📄 Upload Documents", "❓ Ask Questions", "📋 Document Library", "📝 Flashcards"],
         key="page"
     )
-    st.session_state['page'] = page
+    # DO NOT set st.session_state['page'] = page here!
     
     # Stats
     if st.session_state.documents:
@@ -300,7 +300,7 @@ if page == "🏠 Dashboard":
     
     with col1:
         if st.button("📄 Upload New Document", use_container_width=True):
-            st.session_state['page'] = "�� Upload Documents"
+            st.session_state['page'] = "📄 Upload Documents"
     
     with col2:
         if st.button("❓ Start Asking Questions", use_container_width=True):
@@ -452,7 +452,7 @@ elif page == "❓ Ask Questions":
     else:
         st.warning("⚠️ Please upload a document first to ask questions.")
         if st.button("📄 Upload Document"):
-            st.session_state['page'] = "�� Upload Documents"
+            st.session_state['page'] = "📄 Upload Documents"
 
 elif page == "📋 Document Library":
     st.markdown("""
