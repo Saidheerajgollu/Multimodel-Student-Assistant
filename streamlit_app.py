@@ -176,7 +176,7 @@ def setup_rag_chain(chunks):
         # Setup LLM
         genai.configure(api_key=st.secrets.get("GOOGLE_API_KEY"))
         llm = ChatGoogleGenerativeAI(
-            model="gemini-pro",
+            model="gemini-1.0-pro",
             temperature=0.1,
             max_output_tokens=2048
         )
